@@ -1,180 +1,249 @@
 "use client";
 import { useState } from 'react';
-import { MapPin, Globe, Server, Loader2, Search, Target, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Globe, MapPin, ShieldAlert, Loader2, Search, Terminal, Navigation, Server, Cpu } from 'lucide-react';
 
-export default function IPGeoLocator() {
-  const [ip, setIp] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<any>(null);
-  const [error, setError] = useState("");
+export default function IpGeoLocator() {
+  const [target, setTarget] = useState("");
+  const [isLocating, setIsLocating] = useState(false);
+  const [geoReport, setGeoReport] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const locateIP = async () => {
-    // যদি ইনপুট খালি থাকে, তবে নিজের আইপি লোকেট করবে
-    const targetIp = ip.trim() || ""; 
-    setLoading(true);
-    setError("");
-    setData(null);
+  const executeGeoLookup = async () => {
+    if (!target) return;
+    setIsLocating(true);
+    setError(null);
+    setGeoReport(null);
 
     try {
-      // JSONP বা CORS জ্যাম এড়াতে এই API টি অনেক বেশি নির্ভরযোগ্য
-      const response = await fetch(`http://ip-api.com/json/${targetIp}`);
-      const result = await response.json();
+      const response = await fetch('/api/locate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ipOrDomain: target })
+      });
 
-      if (result.status === "fail") {
-        setError(`Error: ${result.message}`);
-      } else {
-        // ডেটা ফরম্যাট ম্যাপিং
-        setData({
-          country_name: result.country,
-          country_code: result.countryCode,
-          region: result.regionName,
-          city: result.city,
-          zip: result.zip,
-          lat: result.lat,
-          lon: result.lon,
-          isp: result.isp,
-          org: result.org,
-          as: result.as,
-          timezone: result.timezone,
-          query: result.query
-        });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to parse coordinate payloads.");
       }
-    } catch (err) {
-      setError("CORS or Connection Error. Please try again or check your browser extensions.");
+
+      setGeoReport(data.geoData);
+    } catch (err: any) {
+      setError(err.message || "Target network trace route failed.");
     } finally {
-      setLoading(false);
+      setIsLocating(false);
     }
   };
 
   return (
     <div style={containerStyle}>
+      <style dangerouslySetInnerHTML={{__html: `
+        .geo-layout {
+          display: grid;
+          grid-template-columns: 1.2fr 1.8fr;
+          gap: 20px;
+          max-width: 1000px;
+          margin: 0 auto;
+        }
+        .data-row {
+          display: flex;
+          justify-content: space-between;
+          padding: 12px;
+          border-bottom: 1px dashed #111;
+          font-size: 14px;
+        }
+        @media (max-width: 850px) {
+          .geo-layout {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}} />
+
+      {/* Header Section */}
       <div style={headerSectionStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <Globe color="#00f2ff" size={28} />
-          <h1 style={titleStyle}>IP_GEO_LOCATOR_ULTIMATE</h1>
+          <h1 style={titleStyle}>OSINT_IP_GEO_LOCATOR_V4</h1>
         </div>
-        <p style={subtitleStyle}>Advanced IP Intelligence & Digital Tracking System.</p>
+        <p style={subtitleStyle}>Asynchronous IP/Domain coordinates scanner mapping regional infrastructure routing tables.</p>
       </div>
 
+      {/* Input Box */}
       <div style={inputContainerStyle}>
         <input 
           type="text" 
-          value={ip}
-          onChange={(e) => setIp(e.target.value)}
-          placeholder="Enter IP Address (leave blank for your IP)" 
+          value={target}
+          onChange={(e) => setTarget(e.target.value)}
+          placeholder="Enter IP Address or Host Domain (e.g. 8.8.8.8)" 
           style={inputStyle}
+          disabled={isLocating}
         />
         <button 
-          onClick={locateIP} 
-          disabled={loading}
-          style={{ ...scanButtonStyle, opacity: loading ? 0.6 : 1 }}
+          onClick={executeGeoLookup} 
+          disabled={isLocating}
+          style={{ ...locateButtonStyle, opacity: isLocating ? 0.6 : 1 }}
         >
-          {loading ? <Loader2 className="animate-spin" /> : <Target size={18} />}
-          {loading ? "SEARCHING..." : "LOCATE"}
+          {isLocating ? <Loader2 className="animate-spin" size={18} /> : <Navigation size={18} />}
+          {isLocating ? "TRACE ROUTING..." : "LOCATE TARGET"}
         </button>
       </div>
 
-      {error && (
-        <div style={errorBoxStyle}>
-          <AlertTriangle size={16} /> {error}
-        </div>
-      )}
-
-      <div style={resultWrapperStyle}>
-        {!data && !loading && (
-          <div style={emptyStateStyle}>
-            <Search size={50} color="#111" />
-            <p style={{ marginTop: '10px' }}>SYSTEM READY: INPUT TARGET IP</p>
+      {/* Main Content Layout */}
+      <div className="geo-layout">
+        
+        {/* Left Side: Intel Details Table */}
+        <div style={panelBoxStyle}>
+          <div style={panelHeaderStyle}>
+            <Terminal size={16} /> METADATA_COORDINATES_REPORT
           </div>
-        )}
 
-        {data && (
-          <div style={gridContainerStyle}>
-            <div style={cardStyle}>
-              <h3 style={cardTitleStyle}><MapPin size={16} /> GEOGRAPHIC</h3>
-              <div style={infoRow}><span>COUNTRY:</span> <strong>{data.country_name}</strong></div>
-              <div style={infoRow}><span>CITY/REGION:</span> <strong>{data.city}, {data.region}</strong></div>
-              <div style={infoRow}><span>ZIP CODE:</span> <strong>{data.zip}</strong></div>
-              <div style={infoRow}><span>IP QUERY:</span> <strong>{data.query}</strong></div>
-            </div>
-
-            <div style={cardStyle}>
-              <h3 style={cardTitleStyle}><Server size={16} /> INFRASTRUCTURE</h3>
-              <div style={infoRow}><span>ISP:</span> <strong>{data.isp}</strong></div>
-              <div style={infoRow}><span>ORGANIZATION:</span> <strong>{data.org}</strong></div>
-              <div style={infoRow}><span>ASN:</span> <strong>{data.as}</strong></div>
-              <div style={infoRow}><span>TIMEZONE:</span> <strong>{data.timezone}</strong></div>
-            </div>
-
-            <div style={cardStyle}>
-              <h3 style={cardTitleStyle}><ShieldCheck size={16} /> COORDINATES</h3>
-              <div style={infoRow}><span>LATITUDE:</span> <strong>{data.lat}</strong></div>
-              <div style={infoRow}><span>LONGITUDE:</span> <strong>{data.lon}</strong></div>
-              <div style={{...infoRow, border: 'none', marginTop: '15px'}}>
-                 <a 
-                   href={`https://www.google.com/maps?q=${data.lat},${data.lon}`} 
-                   target="_blank" 
-                   style={mapLinkStyle}
-                 >
-                   VIEW ON GOOGLE MAPS
-                 </a>
+          <div style={{ minHeight: '300px', position: 'relative' }}>
+            {!geoReport && !isLocating && !error && (
+              <div style={emptyStateStyle}>
+                <Search size={40} color="#111" />
+                <p style={{ marginTop: '10px', fontSize: '12px' }}>[ OSINT ENGINE STANDBY ]</p>
               </div>
-            </div>
+            )}
+
+            {isLocating && (
+              <div style={loadingStateStyle}>
+                <Loader2 className="animate-spin" size={26} color="#0044ff" />
+                <span>INTERCEPTING ISP BACKBONES...</span>
+              </div>
+            )}
+
+            {error && (
+              <div style={{ padding: '30px 15px', color: '#ff0055', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ShieldAlert size={16} /> {error}
+              </div>
+            )}
+
+            {geoReport && (
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div className="data-row"><span style={{color: '#666'}}>RESOLVED_IP:</span><strong style={{color: '#fff'}}>{geoReport.query}</strong></div>
+                <div className="data-row"><span style={{color: '#666'}}>COUNTRY:</span><span style={{color: '#00ff44'}}>{geoReport.country} ({geoReport.countryCode})</span></div>
+                <div className="data-row"><span style={{color: '#666'}}>REGION / CITY:</span><span style={{color: '#fff'}}>{geoReport.regionName} / {geoReport.city}</span></div>
+                <div className="data-row"><span style={{color: '#666'}}>ZIP_CODE:</span><span style={{color: '#fff'}}>{geoReport.zip || 'N/A'}</span></div>
+                <div className="data-row"><span style={{color: '#666'}}>TIMEZONE:</span><span style={{color: '#ffaa00'}}>{geoReport.timezone}</span></div>
+                <div className="data-row"><span style={{color: '#666'}}>ISP_PROVIDER:</span><span style={{color: '#00f2ff', fontSize: '13px', textAlign: 'right', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}} title={geoReport.isp}>{geoReport.isp}</span></div>
+                <div className="data-row"><span style={{color: '#666'}}>COORDINATES:</span><span style={{color: '#fff', fontSize: '13px'}}>{geoReport.lat}, {geoReport.lon}</span></div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
+        {/* Right Side: Live Satellite / Vector Grid Map View */}
+        <div style={{ ...panelBoxStyle, minHeight: '350px' }}>
+          <div style={panelHeaderStyle}>
+            <MapPin size={16} color="#ff0055" /> LIVE_GEOLOCATION_GRID_MAP
+          </div>
+
+          {geoReport ? (
+            <div style={{ width: '100%', height: 'calc(100% - 46px)', minHeight: '320px', borderRadius: '0 0 7px 7px', overflow: 'hidden' }}>
+              <iframe 
+                title="Target Location Map"
+                width="100%" 
+                height="100%" 
+                style={{ border: 0, filter: 'invert(90%) hue-rotate(180deg) contrast(120%)' }} // সাইবার ডার্ক লুকের জন্য ইনভার্ট ফিল্টার
+                loading="lazy"
+                src={`https://maps.google.com/maps?q=${geoReport.lat},${geoReport.lon}&z=13&output=embed`}
+              />
+            </div>
+          ) : (
+            <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#222', fontSize: '12px', height: '100%', minHeight: '320px' }}>
+              [ MAP FEED OFFLINE: AWAITING RESOLVED PAYLOAD ]
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );
 }
 
-// --- Styles (Fixed for Dark Theme) ---
+// --- Styles ---
 const containerStyle: React.CSSProperties = {
-  backgroundColor: '#000', minHeight: '100vh', padding: '40px 20px', color: '#00f2ff', fontFamily: 'monospace'
+  backgroundColor: '#000',
+  minHeight: '100vh',
+  padding: '40px 20px',
+  color: '#00f2ff',
+  fontFamily: 'monospace',
+  boxSizing: 'border-box'
 };
 
 const headerSectionStyle = {
-  maxWidth: '1000px', margin: '0 auto 40px auto', borderLeft: '5px solid #0044ff', paddingLeft: '20px'
+  maxWidth: '1000px',
+  margin: '0 auto 40px auto',
+  borderLeft: '4px solid #0044ff',
+  paddingLeft: '20px'
 };
 
-const titleStyle = { fontSize: '24px', letterSpacing: '2px', margin: 0 };
-const subtitleStyle = { color: '#444', fontSize: '12px', marginTop: '5px' };
+const titleStyle = { fontSize: 'clamp(18px, 5vw, 24px)', letterSpacing: '2px', margin: 0, color: '#fff' };
+const subtitleStyle = { color: '#666', fontSize: '13px', marginTop: '6px', lineHeight: '1.5' };
 
 const inputContainerStyle: React.CSSProperties = {
-  maxWidth: '1000px', margin: '0 auto 30px auto', display: 'flex', gap: '10px'
+  maxWidth: '1000px',
+  margin: '0 auto 30px auto',
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '10px'
 };
 
 const inputStyle = {
-  flex: 1, backgroundColor: '#050505', border: '1px solid #0044ff', padding: '15px', color: '#fff', outline: 'none', borderRadius: '4px'
+  flex: '1 1 400px',
+  backgroundColor: '#050505',
+  border: '1px solid #0044ff',
+  padding: '15px',
+  color: '#fff',
+  fontSize: '15px',
+  outline: 'none',
+  borderRadius: '5px',
+  fontFamily: 'monospace'
 };
 
-const scanButtonStyle = {
-  backgroundColor: '#0044ff', color: '#fff', border: 'none', padding: '0 30px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' as const, display: 'flex', alignItems: 'center', gap: '10px'
+const locateButtonStyle = {
+  flex: '1 1 200px',
+  backgroundColor: '#0044ff',
+  color: '#fff',
+  border: 'none',
+  padding: '15px',
+  borderRadius: '5px',
+  cursor: 'pointer',
+  fontWeight: 'bold' as const,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '10px',
+  fontFamily: 'monospace'
 };
 
-const errorBoxStyle = {
-  maxWidth: '1000px', margin: '0 auto 20px auto', background: '#200', border: '1px solid #f00', padding: '10px', color: '#f55', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px'
+const panelBoxStyle = {
+  backgroundColor: '#050505',
+  border: '1px solid #0044ff',
+  borderRadius: '8px',
+  boxShadow: '0 0 20px rgba(0, 68, 255, 0.05)',
+  overflow: 'hidden'
 };
 
-const gridContainerStyle = {
-  display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px'
+const panelHeaderStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  padding: '12px 15px',
+  backgroundColor: '#0a0a0a',
+  borderBottom: '1px solid #0044ff',
+  fontSize: '12px',
+  color: '#fff',
+  fontWeight: 'bold' as const,
+  letterSpacing: '1px'
 };
 
-const resultWrapperStyle = { maxWidth: '1000px', margin: '0 auto' };
-
-const cardStyle = {
-  background: '#050505', border: '1px solid #111', borderRadius: '8px', padding: '20px'
+const emptyStateStyle: React.CSSProperties = { 
+  position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+  textAlign: 'center', opacity: 0.3, width: '100%' 
 };
 
-const cardTitleStyle = {
-  fontSize: '14px', color: '#0044ff', borderBottom: '1px solid #111', paddingBottom: '10px', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px'
+const loadingStateStyle: React.CSSProperties = {
+  position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+  textAlign: 'center', fontSize: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '100%'
 };
-
-const infoRow = {
-  display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '10px', borderBottom: '1px solid #0a0a0a', paddingBottom: '5px'
-};
-
-const mapLinkStyle = {
-  background: '#0044ff', color: '#fff', padding: '8px 12px', textDecoration: 'none', borderRadius: '4px', fontSize: '11px', width: '100%', textAlign: 'center' as const
-};
-
-const emptyStateStyle: React.CSSProperties = { textAlign: 'center', padding: '100px 0', opacity: 0.2 };
