@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link'; // পেজ নেভিগেশনের জন্য
 import { usePathname } from 'next/navigation'; // অ্যাক্টিভ পেজ ডিটেক্ট করার জন্য
-import { Shield, Zap, Globe, Search, Lock, Wifi, Code,Terminal, Eye, Cpu, Database, Bug, Clock, Calendar, Activity, Menu, X, ArrowRight, Key } from 'lucide-react';
+import { Shield, Zap, Globe, Search, Lock,Radar, Wifi, Code,Terminal, Eye, Cpu, Database, Bug, Clock, Calendar, Activity, Menu, X, ArrowRight, Key } from 'lucide-react';
 
 export default function HackaBox({ children }: { children?: React.ReactNode }) {
   const pathname = usePathname();
@@ -81,7 +81,8 @@ export default function HackaBox({ children }: { children?: React.ReactNode }) {
     { icon: <Code size={20}/>, name: "Phone OSINT", path: "/phone-osint" },
     { icon: <Eye size={20}/>, name: "Website Build Analyzer", path: "/dns-enum" },
     { icon: <Bug size={20}/>, name: "Vuln Scanner", path: "/scanner" },
-        { icon: <Terminal size={20}/>, name: "Website Scraper", path: "/recon-scraper" },
+    { icon: <Radar size={20}/>, name: "User Name Hunter", path: "/username-hunter" },
+    { icon: <Terminal size={20}/>, name: "Website Scraper", path: "/recon-scraper" },
     { icon: <Database size={20}/>, name: "SQL Injector", path: "/sql-injector" },
     { icon: <Shield size={20}/>, name: "Image and PDF Scanner", path: "/bomb" },
   ];
