@@ -214,7 +214,7 @@ export default function HackaBox({ children }: { children?: React.ReactNode }) {
                   {cryptoResult && (
                     <div style={{ ...outputBoxStyle, borderLeftColor: '#ff0055' }}>
                       <span style={{ color: '#00f2ff' }}>[=] OUTPUT RESULT:</span>
-                      <p style={{ color: '#fff', wordBreak: 'break-all', marginTop: '5px', marginGrid: 0 }}>{cryptoResult}</p>
+                      <p style={{ color: '#fff', wordBreak: 'break-all', marginTop: '5px', margin: 0 }}>{cryptoResult}</p>
                     </div>
                   )}
                 </div>
