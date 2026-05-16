@@ -82,7 +82,7 @@ export default function HackaBox({ children }: { children?: React.ReactNode }) {
     { icon: <Eye size={20}/>, name: "Website Build Analyzer", path: "/dns-enum" },
     { icon: <Bug size={20}/>, name: "Vuln Scanner", path: "/scanner" },
     { icon: <Database size={20}/>, name: "SQL Injector", path: "/sql-injector" },
-    { icon: <Shield size={20}/>, name: "SMS Bomber", path: "/bomb" },
+    { icon: <Shield size={20}/>, name: "Image and PDF Scanner", path: "/bomb" },
   ];
 
   // বর্তমান মডিউল এর নাম বের করা
