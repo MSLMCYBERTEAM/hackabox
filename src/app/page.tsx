@@ -89,16 +89,35 @@ export default function HackaBox({ children }: { children?: React.ReactNode }) {
   const currentModule = tools.find(t => t.path === pathname)?.name || "DASHBOARD";
 
   return (
-    <div style={{ backgroundColor: '#000', minHeight: '100vh', color: '#00f2ff', padding: '15px', display: 'flex', flexDirection: 'row', gap: '15px', fontFamily: 'monospace', position: 'relative' }}>
+    <div style={{ backgroundColor: '#000', minHeight: '100vh', color: '#00f2ff', padding: '15px', display: 'flex', flexDirection: 'row', gap: '15px', fontFamily: 'monospace', position: 'relative', overflowX: 'hidden' }}>
       
       {/* CSS For Responsive Grid and Media Queries */}
       <style dangerouslySetInnerHTML={{__html: `
-        @media (max-width: 900px) {
-          aside { position: absolute; left: -320px; top: 15px; bottom: 15px; z-index: 50; transition: 0.3s; }
-          .sidebar-open aside { left: 15px !important; }
+        /* ডেস্কটপে মোবাইল মেনু বাটন এবং ক্লোজ বাটন হাইড থাকবে */
+        .menu-toggle-btn, .sidebar-close-btn { display: none !important; }
+        
+        /* শুধুমাত্র ট্যাবলেট এবং মোবাইলে (১০২৪ পিক্সেল বা তার নিচে) রেসপন্সিভ ড্রয়ার একটিভ হবে */
+        @media (max-width: 1024px) {
+          .menu-toggle-btn { display: block !important; }
+          .sidebar-close-btn { display: block !important; }
+          
+          aside { 
+            position: fixed !important; 
+            left: -340px !important; 
+            top: 15px; 
+            bottom: 15px; 
+            z-index: 999; 
+            transition: 0.3s ease-in-out; 
+            height: calc(100vh - 30px);
+          }
+          
+          .sidebar-open aside { 
+            left: 15px !important; 
+            box-shadow: 0 0 30px #0044ff !important;
+          }
+          
           .main-panel { width: 100% !important; }
           .card-grid { grid-template-columns: 1fr !important; }
-          .crypto-grid { grid-template-columns: 1fr !important; }
           .top-bar-time { display: none !important; }
         }
       `}} />
@@ -116,8 +135,8 @@ export default function HackaBox({ children }: { children?: React.ReactNode }) {
               </div>
             </Link>
             {/* Mobile Close Button */}
-            <button onClick={() => setIsSidebarOpen(false)} style={{ background: 'transparent', border: 'none', color: '#00f2ff', cursor: 'pointer', display: 'block' }} className="lg:hidden">
-              <X size={24} style={{ display: typeof window !== 'undefined' && window.innerWidth <= 900 ? 'block' : 'none' }} />
+            <button className="sidebar-close-btn" onClick={() => setIsSidebarOpen(false)} style={{ background: 'transparent', border: 'none', color: '#00f2ff', cursor: 'pointer' }}>
+              <X size={24} />
             </button>
           </div>
 
@@ -145,9 +164,9 @@ export default function HackaBox({ children }: { children?: React.ReactNode }) {
           {/* Top Bar */}
           <div style={{ padding: '15px', background: '#001122', borderBottom: '1px solid #0044ff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-              {/* Mobile Menu Toggle Button */}
-              <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} style={{ background: 'transparent', border: 'none', color: '#00f2ff', cursor: 'pointer' }}>
-                <Menu size={24} style={{ display: typeof window !== 'undefined' && window.innerWidth <= 900 ? 'block' : 'none' }} />
+              {/* Mobile Menu Toggle Button (3-bar icon) */}
+              <button className="menu-toggle-btn" onClick={() => setIsSidebarOpen(!isSidebarOpen)} style={{ background: 'transparent', border: 'none', color: '#00f2ff', cursor: 'pointer' }}>
+                <Menu size={24} />
               </button>
               <div className="top-bar-time" style={{ display: 'flex', gap: '20px', fontSize: '14px', fontWeight: 'bold' }}>
                 <span><Calendar size={14} style={{marginRight: '5px', display: 'inline', verticalAlign: 'middle'}}/> {date}</span>
@@ -230,7 +249,7 @@ export default function HackaBox({ children }: { children?: React.ReactNode }) {
   );
 }
 
-// --- স্টাইলস (Unchanged old styles + New features responsive alignment) ---
+// --- স্টাইলস ---
 const buttonStyle = {
   display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', 
   background: 'transparent', border: '1px solid #111', borderRadius: '5px', 
@@ -243,7 +262,6 @@ const cardStyle = {
   boxShadow: '0 0 10px #001122'
 };
 
-// --- নতুন স্লটের জন্য উন্নত সিকিউর ডিজাইন এলিমেন্টস ---
 const slotContainerStyle = {
   border: '1px solid #0044ff', padding: '20px', borderRadius: '8px',
   background: '#03030b', boxShadow: '0 0 15px rgba(0, 68, 255, 0.1)'
